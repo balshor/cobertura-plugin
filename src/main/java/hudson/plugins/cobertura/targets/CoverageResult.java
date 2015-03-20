@@ -1,14 +1,9 @@
 package hudson.plugins.cobertura.targets;
 
+import hudson.model.Item;
 import hudson.model.AbstractBuild;
 import hudson.model.Api;
-import hudson.model.Item;
-import hudson.model.Run;
-import hudson.plugins.cobertura.Chartable;
-import hudson.plugins.cobertura.CoberturaBuildAction;
-import hudson.plugins.cobertura.CoverageChart;
 import hudson.plugins.cobertura.Ratio;
-import hudson.util.ChartUtil;
 import hudson.util.TextFile;
 
 import java.io.File;
@@ -16,7 +11,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -28,14 +22,13 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.jfree.chart.JFreeChart;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
 /**
- * Coverage result for a specific programming element. 
+ * Coverage result for a specific programming element.
  *
  * <p>
  * Instances of {@link CoverageResult} form a tree structure to progressively represent smaller elements.
@@ -44,7 +37,7 @@ import org.kohsuke.stapler.export.ExportedBean;
  * @since 22-Aug-2007 18:47:10
  */
 @ExportedBean(defaultVisibility = 2)
-public class CoverageResult implements Serializable, Chartable {
+public class CoverageResult implements Serializable {
 
     /**
      * Generated
@@ -329,22 +322,22 @@ public class CoverageResult implements Serializable, Chartable {
     }
 
     public Ratio getCoverage(CoverageMetric metric) {
-    	
+
         return aggregateResults.get(metric);
     }
-    
+
     public Ratio getCoverageWithEmpty(CoverageMetric metric) {
     	if (aggregateResults.containsKey(metric))
     		return aggregateResults.get(metric);
     	Map<CoverageMetric, Ratio> currMetricSet = new EnumMap<CoverageMetric, Ratio>(CoverageMetric.class);
-    	currMetricSet.putAll(aggregateResults);    	
+    	currMetricSet.putAll(aggregateResults);
     	if (!currMetricSet.containsKey(metric))
     	{
     		return null;
     	}
         return currMetricSet.get(metric);
     }
-    
+
     /**
      * Getter for property 'metrics'.
      *
@@ -360,7 +353,7 @@ public class CoverageResult implements Serializable, Chartable {
     	fixEmptyMetrics(findEmptyMetrics(currMetricSet), currMetricSet);
     	return Collections.unmodifiableSet(EnumSet.copyOf(currMetricSet.keySet()));
     }
-    
+
     private List<CoverageMetric> findEmptyMetrics(Map<CoverageMetric, Ratio> currMetricSet){
     	List<CoverageMetric> allMetrics = new LinkedList<CoverageMetric>(Arrays.asList(CoverageMetric.PACKAGES, CoverageMetric.FILES, CoverageMetric.CLASSES, CoverageMetric.METHOD, CoverageMetric.LINE, CoverageMetric.CONDITIONAL));
     	List<CoverageMetric> missingMetrics = new LinkedList<CoverageMetric>();
@@ -373,14 +366,14 @@ public class CoverageResult implements Serializable, Chartable {
     	}
     	return missingMetrics;
     }
-    
+
     private void fixEmptyMetrics(List<CoverageMetric> missingMetrics, Map<CoverageMetric, Ratio> currMetricSet) {
     	for (CoverageMetric missing : missingMetrics)
     	{
     		currMetricSet.put(missing, Ratio.create(1, 1));
     	}
     }
-    
+
     public void updateMetric(CoverageMetric metric, Ratio additionalResult) {
         if (localResults.containsKey(metric)) {
             Ratio existingResult = localResults.get(metric);
@@ -425,34 +418,6 @@ public class CoverageResult implements Serializable, Chartable {
         }
     }
 
-    /**
-     * Getter for property 'previousResult'.
-     *
-     * @return Value for property 'previousResult'.
-     */
-    public CoverageResult getPreviousResult() {
-        if (parent == null) {
-            if (owner == null) {
-                return null;
-            }
-            Run<?, ?> prevBuild = owner.getPreviousNotFailedBuild();
-            if (prevBuild == null) {
-                return null;
-            }
-            CoberturaBuildAction action = null;
-            while ((prevBuild != null) && (null == (action = prevBuild.getAction(CoberturaBuildAction.class)))) {
-                prevBuild = prevBuild.getPreviousNotFailedBuild();
-            }
-            if (action == null) {
-                return null;
-            }
-            return action.getResult();
-        } else {
-            CoverageResult prevParent = parent.getPreviousResult();
-            return prevParent == null ? null : prevParent.getChild(name);
-        }
-    }
-
     public Object getDynamic(String token, StaplerRequest req, StaplerResponse rsp) throws IOException {
         token = token.toLowerCase();
         for (String name : children.keySet()) {
@@ -465,26 +430,6 @@ public class CoverageResult implements Serializable, Chartable {
 
     public void doCoverageHighlightedSource(StaplerRequest req, StaplerResponse rsp) throws IOException {
         // TODO
-    }
-
-    /**
-     * Generates the graph that shows the coverage trend up to this report.
-     */
-    public void doGraph(StaplerRequest req, StaplerResponse rsp) throws IOException {
-        if (ChartUtil.awtProblemCause != null) {
-            // not available. send out error message
-            rsp.sendRedirect2(req.getContextPath() + "/images/headless.png");
-            return;
-        }
-
-        AbstractBuild<?, ?> build = getOwner();
-        Calendar t = build.getTimestamp();
-
-        if (req.checkIfModified(t, rsp)) {
-            return; // up to date
-        }
-        JFreeChart chart = new CoverageChart(this).createChart();
-        ChartUtil.generateGraph(req, rsp, chart, 500, 200);
     }
 
     /**

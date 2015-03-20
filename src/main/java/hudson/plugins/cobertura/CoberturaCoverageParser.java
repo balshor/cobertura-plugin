@@ -3,7 +3,6 @@ package hudson.plugins.cobertura;
 import hudson.plugins.cobertura.targets.CoverageElement;
 import hudson.plugins.cobertura.targets.CoverageMetric;
 import hudson.plugins.cobertura.targets.CoverageResult;
-import hudson.util.IOException2;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -85,9 +84,9 @@ public class CoberturaCoverageParser {
       }
       return handler.getRootCoverage();
     } catch (ParserConfigurationException e) {
-      throw new IOException2("Cannot parse coverage results", e);
+      throw new IOException("Cannot parse coverage results", e);
     } catch (SAXException e) {
-      throw new IOException2("Cannot parse coverage results", e);
+      throw new IOException("Cannot parse coverage results", e);
     }
   }
 }

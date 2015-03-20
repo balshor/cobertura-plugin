@@ -1,6 +1,5 @@
 package hudson.plugins.cobertura;
 
-import hudson.model.AbstractBuild;
 import hudson.plugins.cobertura.targets.CoverageElement;
 import hudson.plugins.cobertura.targets.CoverageMetric;
 import hudson.plugins.cobertura.targets.CoverageResult;
@@ -28,7 +27,6 @@ import org.easymock.classextension.IMocksControl;
 public class CoverageResultTest extends TestCase {
     private static final String FILE_COVERAGE_DATA = "coverage-with-data.xml";
     private IMocksControl ctl;
-    private AbstractBuild<?, ?> build;
 
     /**
      * Set up the mock objects used by the tests.
@@ -36,7 +34,6 @@ public class CoverageResultTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         ctl = EasyMock.createControl();
-        build = ctl.createMock("build", AbstractBuild.class);
     }
 
     /**

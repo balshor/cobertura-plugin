@@ -17,11 +17,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
-import org.kohsuke.stapler.export.Exported;
-import org.kohsuke.stapler.export.ExportedBean;
-
 /**
  * Coverage result for a specific programming element.
  *
@@ -31,7 +26,6 @@ import org.kohsuke.stapler.export.ExportedBean;
  * @author Stephen Connolly
  * @since 22-Aug-2007 18:47:10
  */
-@ExportedBean(defaultVisibility = 2)
 public class CoverageResult implements Serializable {
 
     /**
@@ -232,7 +226,6 @@ public class CoverageResult implements Serializable {
      *
      * @return Value for property 'results'.
      */
-    @Exported(name = "results")
     public CoverageTree getResultsAPI() {
         return new CoverageTree(name, aggregateResults, children);
     }
@@ -353,20 +346,6 @@ public class CoverageResult implements Serializable {
         if (paint != null) {
             aggregateResults.putAll(paint.getResults());
         }
-    }
-
-    public Object getDynamic(String token, StaplerRequest req, StaplerResponse rsp) throws IOException {
-        token = token.toLowerCase();
-        for (String name : children.keySet()) {
-            if (urlTransform(name).toLowerCase().equals(token)) {
-                return getChild(name);
-            }
-        }
-        return null;
-    }
-
-    public void doCoverageHighlightedSource(StaplerRequest req, StaplerResponse rsp) throws IOException {
-        // TODO
     }
 
     /**

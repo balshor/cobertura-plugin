@@ -6,14 +6,10 @@ import java.util.Map.Entry;
 
 import hudson.plugins.cobertura.Ratio;
 
-import org.kohsuke.stapler.export.Exported;
-import org.kohsuke.stapler.export.ExportedBean;
-
-@ExportedBean
 public class CoverageTree implements Serializable {
 
     /**
-     * Generated 
+     * Generated
      */
     private static final long serialVersionUID = 5112467356061418891L;
 
@@ -30,12 +26,10 @@ public class CoverageTree implements Serializable {
         this.children = children;
     }
 
-    @Exported
     public String getName() {
         return name;
     }
 
-    @Exported
     public CoverageTreeElement[] getElements() {
         CoverageTreeElement[] cte = new CoverageTreeElement[aggregateResults.size()];
         int current = 0;
@@ -46,7 +40,6 @@ public class CoverageTree implements Serializable {
         return cte;
     }
 
-    @Exported
     public CoverageTree[] getChildren() {
         CoverageTree[] ct = new CoverageTree[children.size()];
         int current = 0;

@@ -2,12 +2,8 @@ package hudson.plugins.cobertura.targets;
 
 import java.io.Serializable;
 
-import org.kohsuke.stapler.export.Exported;
-import org.kohsuke.stapler.export.ExportedBean;
-
 import hudson.plugins.cobertura.Ratio;
 
-@ExportedBean
 public class CoverageTreeElement implements Serializable {
 
     /**
@@ -24,22 +20,18 @@ public class CoverageTreeElement implements Serializable {
         this.ratio = ratio;
     }
 
-    @Exported
     public String getName() {
         return metric.getName();
     }
 
-    @Exported
     public float getRatio() {
         return ratio.getPercentageFloat();
     }
-    
-    @Exported
+
     public float getNumerator() {
         return ratio.numerator;
     }
-    
-    @Exported
+
     public float getDenominator() {
         return ratio.denominator;
     }

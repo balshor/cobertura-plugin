@@ -55,7 +55,7 @@ public class CoberturaCoverageParserTest extends TestCase {
         print(result, 0);
         assertNotNull(result);
         assertEquals(CoverageResult.class, result.getClass());
-        assertEquals(Messages.CoberturaCoverageParser_name(), result.getName());
+        assertEquals("Cobertura Coverage Report", result.getName());
 //        assertEquals(10, result.getMethods());
         assertEquals(2, result.getChildren().size());
         CoverageResult subResult = result.getChild("<default>");
@@ -78,7 +78,7 @@ public class CoberturaCoverageParserTest extends TestCase {
         print(result, 0);
         assertNotNull(result);
         assertEquals(CoverageResult.class, result.getClass());
-        assertEquals(Messages.CoberturaCoverageParser_name(), result.getName());
+        assertEquals("Cobertura Coverage Report", result.getName());
 //        assertEquals(10, result.getMethods());
         assertEquals(2, result.getChildren().size());
         CoverageResult subResult = result.getChild("<default>");
@@ -102,7 +102,7 @@ public class CoberturaCoverageParserTest extends TestCase {
         print(result, 0);
         assertNotNull(result);
         assertEquals(CoverageResult.class, result.getClass());
-        assertEquals(Messages.CoberturaCoverageParser_name(), result.getName());
+        assertEquals("Cobertura Coverage Report", result.getName());
 
         assertEquals(4, result.getChildren().size());
         CoverageResult subResult = result.getChild("Common");

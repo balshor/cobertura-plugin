@@ -1,17 +1,17 @@
 package hudson.plugins.cobertura;
 
-import junit.framework.TestCase;
-import hudson.plugins.cobertura.targets.CoverageResult;
 import hudson.plugins.cobertura.targets.CoverageMetric;
+import hudson.plugins.cobertura.targets.CoverageResult;
 
 import java.io.InputStream;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
+
+import junit.framework.TestCase;
+
 import org.jvnet.hudson.test.Bug;
 import org.netbeans.insane.scanner.CountingVisitor;
 import org.netbeans.insane.scanner.ScannerUtils;
@@ -51,7 +51,7 @@ public class CoberturaCoverageParserTest extends TestCase {
     public void testParse() throws Exception {
         Set<String> paths = new HashSet<String>();
         CoverageResult result = CoberturaCoverageParser.parse(getClass().getResourceAsStream("coverage.xml"), null, paths);
-        result.setOwner(null);
+        result.computeAggregateResults();
         print(result, 0);
         assertNotNull(result);
         assertEquals(CoverageResult.class, result.getClass());
@@ -74,7 +74,7 @@ public class CoberturaCoverageParserTest extends TestCase {
 
     public void testParse2() throws Exception {
         CoverageResult result = CoberturaCoverageParser.parse(getClass().getResourceAsStream("coverage-with-data.xml"), null);
-        result.setOwner(null);
+        result.computeAggregateResults();
         print(result, 0);
         assertNotNull(result);
         assertEquals(CoverageResult.class, result.getClass());
@@ -98,12 +98,12 @@ public class CoberturaCoverageParserTest extends TestCase {
     public void testParse_NotRelativeSourcePath() throws Exception {
         Set<String> paths = new HashSet<String>();
         CoverageResult result = CoberturaCoverageParser.parse(getClass().getResourceAsStream("coverage_16252.xml"), null, paths);
-        result.setOwner(null);
+        result.computeAggregateResults();
         print(result, 0);
         assertNotNull(result);
         assertEquals(CoverageResult.class, result.getClass());
-        assertEquals(Messages.CoberturaCoverageParser_name(), result.getName());   
-        
+        assertEquals(Messages.CoberturaCoverageParser_name(), result.getName());
+
         assertEquals(4, result.getChildren().size());
         CoverageResult subResult = result.getChild("Common");
         assertEquals("Common", subResult.getName());
@@ -111,9 +111,9 @@ public class CoberturaCoverageParserTest extends TestCase {
         CoverageResult sub2Result = subResult.getChild("CommonLibrary/ProfilerTest.cpp");
         assertNotNull(sub2Result);
         assertEquals("CommonLibrary/ProfilerTest.cpp", sub2Result.getRelativeSourcePath());
-        
-    }  
-    
+
+    }
+
     public void testParseMultiPackage() throws Exception {
 //        ProjectCoverage result = CoberturaCoverageParser.parse(getClass().getResourceAsStream("coverage-two-packages.xml"));
 //        result = CoberturaCoverageParser.trimPaths(result, "C:\\local\\maven\\helpers\\hudson\\cobertura\\");
@@ -124,11 +124,11 @@ public class CoberturaCoverageParserTest extends TestCase {
 //        assertEquals(2, result.getPackageCoverages().size());
 ////        assertEquals(14, result.findClassCoverage("hudson.plugins.cobertura.results.AbstractCloverMetrics").getCoveredmethods());
     }
-    
+
     /**
      * Tests the memory usage of
      * {@link CoberturaCoverageParser#parse(InputStream, CoverageResult, Set)}.
-     * 
+     *
      * @since 28-Apr-2009
      */
     public void testParseMemoryUsage() throws Exception {
@@ -136,27 +136,27 @@ public class CoberturaCoverageParserTest extends TestCase {
         files.put("coverage.xml", 16152);
         files.put("coverage-with-data.xml", 16232);
         files.put("coverage-with-lots-of-data.xml", 298960);
-        
+
         for (Map.Entry<String,Integer> e : files.entrySet()) {
             final String fileName = e.getKey();
             InputStream in = getClass().getResourceAsStream(fileName);
             CoverageResult result = CoberturaCoverageParser.parse(in, null, null);
-            result.setOwner(null);
+            result.computeAggregateResults();
             assertMaxMemoryUsage(fileName + " results", result, e.getValue());
         }
     }
-    
+
     /**
      * Tests the memory usage of a specified object.
      * The memory usage is then compared with the specified
      * maximum desired memory usage.  If the average memory usage is greater
      * than the specified number, it will be reported as a failed assertion.
-     * 
+     *
      * @param description a plain-text description, to be used
      *          in diagnostic messages
      * @param o the object to measure
      * @param maxMemoryUsage the maximum desired memory usage for the Callable,
-     *          in bytes 
+     *          in bytes
      */
     private static void assertMaxMemoryUsage(String description, Object o, int maxMemoryUsage) throws Exception {
         CountingVisitor v = new CountingVisitor();

@@ -1,12 +1,7 @@
 package hudson.plugins.cobertura.targets;
 
-import hudson.model.Item;
-import hudson.model.AbstractBuild;
-import hudson.model.Api;
 import hudson.plugins.cobertura.Ratio;
-import hudson.util.TextFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -69,8 +64,6 @@ public class CoverageResult implements Serializable {
     private final CoveragePaint paint;
 
     private String relativeSourcePath;
-
-    public AbstractBuild<?, ?> owner = null;
 
     public CoverageResult(CoverageElement elementType, CoverageResult parent, String name) {
         this.element = elementType;
@@ -156,50 +149,6 @@ public class CoverageResult implements Serializable {
         if (paint != null) {
             paint.paint(line, hits, branchHits, branchTotal);
         }
-    }
-
-    /**
-     * gets the file corresponding to the source file.
-     *
-     * @return The file where the source file should be (if it exists)
-     */
-    private File getSourceFile() {
-        if (hasPermission()) {
-            return new File(owner.getProject().getRootDir(), "cobertura/" + relativeSourcePath);
-        }
-        return null;
-    }
-
-    /**
-     * Getter for property 'sourceFileAvailable'.
-     *
-     * @return Value for property 'sourceFileAvailable'.
-     */
-    public boolean isSourceFileAvailable() {
-        if (hasPermission()) {
-            return owner == owner.getProject().getLastSuccessfulBuild() && getSourceFile().exists();
-        }
-        return false;
-    }
-
-    public boolean hasPermission() {
-        return owner.hasPermission(Item.WORKSPACE);
-    }
-
-    /**
-     * Getter for property 'sourceFileContent'.
-     *
-     * @return Value for property 'sourceFileContent'.
-     */
-    public String getSourceFileContent() {
-        if (hasPermission()) {
-            try {
-                return new TextFile(getSourceFile()).read();
-            } catch (IOException e) {
-                return null;
-            }
-        }
-        return null;
     }
 
     /**
@@ -384,24 +333,12 @@ public class CoverageResult implements Serializable {
     }
 
     /**
-     * Getter for property 'owner'.
-     *
-     * @return Value for property 'owner'.
+     * Recursively roll up the aggregate coverage results in this result (sub)tree.
      */
-    public AbstractBuild<?, ?> getOwner() {
-        return owner;
-    }
-
-    /**
-     * Setter for property 'owner'.
-     *
-     * @param owner Value to set for property 'owner'.
-     */
-    public void setOwner(AbstractBuild<?, ?> owner) {
-        this.owner = owner;
+    public void computeAggregateResults() {
         aggregateResults.clear();
         for (CoverageResult child : children.values()) {
-            child.setOwner(owner);
+            child.computeAggregateResults();
             if (paint != null && child.paint != null && CoveragePaintRule.propagatePaintToParent(child.element)) {
                 paint.add(child.paint);
             }
@@ -447,9 +384,5 @@ public class CoverageResult implements Serializable {
             result.put(relativeSourcePath, paint);
         }
         return result;
-    }
-
-    public Api getApi() {
-        return new Api(this);
     }
 }

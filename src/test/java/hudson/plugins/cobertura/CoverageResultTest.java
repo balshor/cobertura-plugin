@@ -1,5 +1,10 @@
 package hudson.plugins.cobertura;
 
+import hudson.model.AbstractBuild;
+import hudson.plugins.cobertura.targets.CoverageElement;
+import hudson.plugins.cobertura.targets.CoverageMetric;
+import hudson.plugins.cobertura.targets.CoverageResult;
+
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
@@ -9,18 +14,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import junit.framework.TestCase;
+
 import org.easymock.classextension.EasyMock;
 import org.easymock.classextension.IMocksControl;
 
-import hudson.model.AbstractBuild;
-import hudson.plugins.cobertura.targets.CoverageElement;
-import hudson.plugins.cobertura.targets.CoverageMetric;
-import hudson.plugins.cobertura.targets.CoverageResult;
-import junit.framework.TestCase;
-
 /**
  * Unit tests for {@link CoverageResult}.
- * 
+ *
  * @author davidmc24
  * @since 28-Apr-2009
  */
@@ -37,10 +38,10 @@ public class CoverageResultTest extends TestCase {
         ctl = EasyMock.createControl();
         build = ctl.createMock("build", AbstractBuild.class);
     }
-    
+
     /**
      * Parses a coverage XML file into a CoverageResult object.
-     * 
+     *
      * @param fileName the name of the resource to parse
      * @return a CoverageResult object
      */
@@ -51,25 +52,13 @@ public class CoverageResultTest extends TestCase {
     }
 
     /**
-     * Tests the behavior of {@link CoverageResult#setOwner(AbstractBuild)}.
-     */
-    public void testSetOwner() throws Exception {
-        ctl.replay();
-        CoverageResult result = loadResults(FILE_COVERAGE_DATA);
-        assertNull(result.getOwner());
-        result.setOwner(build);
-        assertSame(build, result.getOwner());
-        ctl.verify();
-    }
-    
-    /**
      * Tests the behavior of {@link CoverageResult#getResults()}.
      */
     public void testGetResults() throws Exception {
         ctl.replay();
         CoverageResult result = loadResults(FILE_COVERAGE_DATA);
         assertEquals(Collections.EMPTY_MAP, result.getResults());
-        result.setOwner(build);
+        result.computeAggregateResults();
         Map<CoverageMetric,Ratio> metrics = result.getResults();
         assertEquals(6, result.getResults().size());
         assertEquals(Ratio.create(2, 2), metrics.get(CoverageMetric.PACKAGES));
@@ -80,7 +69,7 @@ public class CoverageResultTest extends TestCase {
         assertEquals(Ratio.create(9, 12), metrics.get(CoverageMetric.CONDITIONAL));
         ctl.verify();
     }
-    
+
     /**
      * Test behavior of {@link CoverageResult#getMetricsWithEmpty()}.
      */
@@ -92,7 +81,7 @@ public class CoverageResultTest extends TestCase {
     	assertEquals(metrics.size(), allMetrics.size());
     	ctl.verify();
     }
-    
+
     /**
      * Tests the behavior of {@link CoverageResult#getParent()}.
      */
@@ -100,7 +89,7 @@ public class CoverageResultTest extends TestCase {
         ctl.replay();
         // Project level
         CoverageResult result = loadResults(FILE_COVERAGE_DATA);
-        result.setOwner(build);
+        result.computeAggregateResults();
         assertNull(result.getParent());
         // Package level
         CoverageResult expectedParent = result;
@@ -120,7 +109,7 @@ public class CoverageResultTest extends TestCase {
         assertSame(expectedParent, result.getParent());
         ctl.verify();
     }
-    
+
     /**
      * Tests the behavior of {@link CoverageResult#getParents()}.
      */
@@ -129,7 +118,8 @@ public class CoverageResultTest extends TestCase {
         // Project level
         LinkedList<CoverageResult> expectedParents = new LinkedList<CoverageResult>();
         CoverageResult result = loadResults(FILE_COVERAGE_DATA);
-        result.setOwner(build);
+        result.computeAggregateResults();
+
         assertEquals(expectedParents, result.getParents());
         // Package level
         expectedParents.add(result);
@@ -149,7 +139,7 @@ public class CoverageResultTest extends TestCase {
         assertEquals(expectedParents, result.getParents());
         ctl.verify();
     }
-    
+
     /**
      * Tests the behavior of {@link CoverageResult#getChildElements()}.
      */
@@ -157,7 +147,7 @@ public class CoverageResultTest extends TestCase {
         ctl.replay();
         // Project level
         CoverageResult result = loadResults(FILE_COVERAGE_DATA);
-        result.setOwner(build);
+        result.computeAggregateResults();
         assertEquals(Collections.singleton(CoverageElement.JAVA_PACKAGE), result.getChildElements());
         // Package level
         result = result.getChild("search");
@@ -173,7 +163,7 @@ public class CoverageResultTest extends TestCase {
         assertEquals(Collections.emptySet(), result.getChildElements());
         ctl.verify();
     }
-    
+
     /**
      * Tests the behavior of {@link CoverageResult#getChildren()}.
      */
@@ -181,7 +171,7 @@ public class CoverageResultTest extends TestCase {
         ctl.replay();
         // Project level
         CoverageResult result = loadResults(FILE_COVERAGE_DATA);
-        result.setOwner(build);
+        result.computeAggregateResults();
         assertEquals(new HashSet<String>(Arrays.asList(new String[] {"search", "<default>"})), result.getChildren());
         // Package level
         result = result.getChild("search");
@@ -197,7 +187,7 @@ public class CoverageResultTest extends TestCase {
         assertEquals(Collections.emptySet(), result.getChildren());
         ctl.verify();
     }
-    
+
     /**
      * Tests the behavior of {@link CoverageResult#getChildren(CoverageElement)}.
      */
@@ -205,7 +195,7 @@ public class CoverageResultTest extends TestCase {
         ctl.replay();
         // Project level
         CoverageResult result = loadResults(FILE_COVERAGE_DATA);
-        result.setOwner(build);
+        result.computeAggregateResults();
         assertEquals(new HashSet<String>(Arrays.asList(new String[] {"search", "<default>"})), result.getChildren(CoverageElement.JAVA_PACKAGE));
         assertEquals(Collections.emptySet(), result.getChildren(CoverageElement.PROJECT));
         assertEquals(Collections.emptySet(), result.getChildren(CoverageElement.JAVA_FILE));
@@ -249,7 +239,7 @@ public class CoverageResultTest extends TestCase {
         ctl.replay();
         // Project level
         CoverageResult result = loadResults(FILE_COVERAGE_DATA);
-        result.setOwner(build);
+        result.computeAggregateResults();
         assertEquals(new HashSet<CoverageMetric>(Arrays.asList(new CoverageMetric[] {CoverageMetric.FILES, CoverageMetric.CLASSES, CoverageMetric.METHOD, CoverageMetric.LINE, CoverageMetric.CONDITIONAL})), result.getChildMetrics(CoverageElement.JAVA_PACKAGE));
         assertEquals(Collections.EMPTY_SET, result.getChildMetrics(CoverageElement.PROJECT));
         assertEquals(Collections.EMPTY_SET, result.getChildMetrics(CoverageElement.JAVA_FILE));
